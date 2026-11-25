@@ -29,6 +29,8 @@ def validate(line: str) -> None:
     """Check the line against the bounty gate."""
     if not line or not line.strip():
         raise ValueError("entry line must not be blank")
+    if "\n" in line or "\r" in line:
+        raise ValueError("entry line must be a single line, no line breaks")
     if len(line) > MAX_LENGTH:
         raise ValueError(
             f"entry line is {len(line)} characters, over the {MAX_LENGTH} limit"
@@ -45,6 +47,12 @@ def main() -> int:
         os.makedirs(parent, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as fh:
         fh.write(ENTRY_LINE + "\n")
+    # Read back what was written: the gate scores the file on disk, so
+    # confirm it holds exactly the validated line plus one newline.
+    with open(output_path, encoding="utf-8") as fh:
+        written = fh.read()
+    if written != ENTRY_LINE + "\n":
+        raise ValueError("output file does not match the validated entry line")
     return 0
 
 
